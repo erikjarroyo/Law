@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estate, Gift, and GST Tax Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        label, input, select, button {
+            display: block;
+            margin: 10px 0;
+        }
+        button {
+            padding: 10px 20px;
+        }
+        #results {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Estate, Gift, and GST Tax Calculator</h1>
+    <form id="tax-form">
+        <div class="section">
+            <h2>General Information</h2>
+            <label for="filing-status">Filing Status:</label>
+            <select id="filing-status" name="filing-status">
+                <option value="single">Single</option>
+                <option value="married">Married</option>
+            </select>
+            <label for="state">State of Residence:</label>
+            <input type="text" id="state" name="state">
+        </div>
+
+        <div class="section" id="assets-section">
+            <h2>Assets</h2>
+            <div class="asset-item">
+                <label for="asset-type-1">Asset Type:</label>
+                <input type="text" id="asset-type-1" name="asset-type">
+                <label for="asset-value-1">Asset Value:</label>
+                <input type="number" id="asset-value-1" name="asset-value">
+            </div>
+            <button type="button" onclick="addAsset()">Add Asset</button>
+        </div>
+
+        <div class="section" id="liabilities-section">
+            <h2>Liabilities</h2>
+            <div class="liability-item">
+                <label for="liability-type-1">Liability Type:</label>
+                <input type="text" id="liability-type-1" name="liability-type">
+                <label for="liability-amount-1">Liability Amount:</label>
+                <input type="number" id="liability-amount-1" name="liability-amount">
+            </div>
+            <button type="button" onclick="addLiability()">Add Liability</button>
+        </div>
+
+        <div class="section" id="transfers-section">
+            <h2>Transfers</h2>
+            <div class="transfer-item">
+                <label for="transfer-amount-1">Transfer Amount:</label>
+                <input type="number" id="transfer-amount-1" name="transfer-amount">
+                <label for="transfer-recipient-1">Recipient:</label>
+                <input type="text" id="transfer-recipient-1" name="transfer-recipient">
+            </div>
+            <button type="button" onclick="addTransfer()">Add Transfer</button>
+        </div>
+
+        <div class="section">
+            <h2>Exemptions and Deductions</h2>
+            <label for="annual-gift-exclusion">Annual Gift Tax Exclusion:</label>
+            <input type="number" id="annual-gift-exclusion" name="annual-gift-exclusion" value="15000">
+            <label for="lifetime-exemption">Lifetime Exemption:</label>
+            <input type="number" id="lifetime-exemption" name="lifetime-exemption" value="12060000">
+        </div>
+
+        <button type="button" onclick="calculateTaxes()">Calculate Taxes</button>
+    </form>
+
+    <div id="results" class="section">
+        <h2>Results</h2>
+        <div id="results-content"></div>
+    </div>
+
+    <script>
+        let assetCount = 1;
+        let liabilityCount = 1;
+        let transferCount = 1;
+
+        function addAsset() {
+            assetCount++;
+            const assetItem = document.createElement('div');
+            assetItem.className = 'asset-item';
+            assetItem.innerHTML = `
+                <label for="asset-type-${assetCount}">Asset Type:</label>
+                <input type="text" id="asset-type-${assetCount}" name="asset-type">
+                <label for="asset-value-${assetCount}">Asset Value:</label>
+                <input type="number" id="asset-value-${assetCount}" name="asset-value">
+            `;
+            document.getElementById('assets-section').insertBefore(assetItem, document.querySelector('#assets-section button'));
+        }
+
+        function addLiability() {
+            liabilityCount++;
+            const liabilityItem = document.createElement('div');
+            liabilityItem.className = 'liability-item';
+            liabilityItem.innerHTML = `
+                <label for="liability-type-${liabilityCount}">Liability Type:</label>
+                <input type="text" id="liability-type-${liabilityCount}" name="liability-type">
+                <label for="liability-amount-${liabilityCount}">Liability Amount:</label>
+                <input type="number" id="liability-amount-${liabilityCount}" name="liability-amount">
+            `;
+            document.getElementById('liabilities-section').insertBefore(liabilityItem, document.querySelector('#liabilities-section button'));
+        }
+
+        function addTransfer() {
+            transferCount++;
+            const transferItem = document.createElement('div');
+            transferItem.className = 'transfer-item';
+            transferItem.innerHTML = `
+                <label for="transfer-amount-${transferCount}">Transfer Amount:</label>
+                <input type="number" id="transfer-amount-${transferCount}" name="transfer-amount">
+                <label for="transfer-recipient-${transferCount}">Recipient:</label>
+                <input type="text" id="transfer-recipient-${transferCount}" name="transfer-recipient">
+            `;
+            document.getElementById('transfers-section').insertBefore(transferItem, document.querySelector('#transfers-section button'));
+        }
+
+        function calculateTaxes() {
+            const formData = new FormData(document.getElementById('tax-form'));
+            const data = {
+                filingStatus: formData.get('filing-status'),
+                state: formData.get('state'),
+                assets: [],
+                liabilities: [],
+                transfers: [],
+                annualGiftExclusion: parseFloat(formData.get('annual-gift-exclusion')),
+                lifetimeExemption: parseFloat(formData.get('lifetime-exemption'))
+            };
+
+            for (let i = 1; i <= assetCount; i++) {
+                const type = formData.get(`asset-type-${i}`);
+                const value = parseFloat(formData.get(`asset-value-${i}`));
+                if (type && !isNaN(value)) {
+                    data.assets.push({ type, value });
+                }
+            }
+
+            for (let i = 1; i <= liabilityCount; i++) {
+                const type = formData.get(`liability-type-${i}`);
+                const value = parseFloat(formData.get(`liability-amount-${i}`));
+                if (type && !isNaN(value)) {
+                    data.liabilities.push({ type, value });
+                }
+            }
+
+            for (let i = 1; i <= transferCount; i++) {
+                const amount = parseFloat(formData.get(`transfer-amount-${i}`));
+                const recipient = formData.get(`transfer-recipient-${i}`);
+                if (!isNaN(amount) && recipient) {
+                    data.transfers.push({ amount, recipient });
+                }
+            }
+
+            const grossEstateValue = data.assets.reduce((total, asset) => total + asset.value, 0);
+            const totalLiabilities = data.liabilities.reduce((total, liability) => total + liability.value, 0);
+            const netEstateValue = grossEstateValue - totalLiabilities;
+            const taxableEstate = netEstateValue - data.lifetimeExemption;
+            const federalEstateTaxLiability = taxableEstate > 0 ? taxableEstate * 0.40 : 0;
+            const stateEstateTaxLiability = 0; // Placeholder for state estate tax calculation
+            const totalLifetimeGifts = data.transfers.reduce((total, transfer) => total + transfer.amount, 0);
+            const annualExclusionsApplied = data.transfers.length * data.annualGiftExclusion;
+            const taxableGifts = totalLifetimeGifts - annualExclusionsApplied;
+            const federalGiftTaxLiability = taxableGifts > 0 ? taxableGifts * 0.40 : 0;
+            const totalGSTTransfers = data.transfers.reduce((total, transfer) => total + transfer.amount, 0);
+            const gstTaxableAmount = totalGSTTransfers - data.lifetimeExemption;
+            const federalGSTTaxLiability = gstTaxableAmount > 0 ? gstTaxableAmount * 0.40 : 0;
+
+            const result = {
+                grossEstateValue,
+                totalLiabilities,
+                netEstateValue,
+                taxableEstate,
+                federalEstateTaxLiability,
+                stateEstateTaxLiability,
+                totalLifetimeGifts,
+                annualExclusionsApplied,
+                taxableGifts,
+                federalGiftTaxLiability,
+                totalGSTTransfers,
+                gstTaxableAmount,
+                federalGSTTaxLiability
+            };
+
+            displayResults(result);
+        }
+
+        function displayResults(result) {
+            document.getElementById('results-content').innerHTML = `
+                <p>Gross Estate Value: $${result.grossEstateValue.toLocaleString()}</p>
+                <p>Total Liabilities: $${result.totalLiabilities.toLocaleString()}</p>
+                <p>Net Estate Value: $${result.netEstateValue.toLocaleString()}</p>
+                <p>Taxable Estate: $${result.taxableEstate.toLocaleString()}</p>
+                <p>Federal Estate Tax Liability: $${result.federalEstateTaxLiability.toLocaleString()}</p>
+                <p>State Estate Tax Liability: $${result.stateEstateTaxLiability.toLocaleString()}</p>
+                <p>Total Lifetime Gifts: $${result.totalLifetimeGifts.toLocaleString()}</p>
+                <p>Annual Exclusions Applied: $${result.annualExclusionsApplied.toLocaleString()}</p>
+                <p>Taxable Gifts: $${result.taxableGifts.toLocaleString()}</p>
+                <p>Federal Gift Tax Liability: $${result.federalGiftTaxLiability.toLocaleString()}</p>
+                <p>Total GST Transfers: $${result.totalGSTTransfers.toLocaleString()}</p>
+                <p>GST Taxable Amount: $${result.gstTaxableAmount.toLocaleString()}</p>
+                <p>Federal GST Tax Liability: $${result.federalGSTTaxLiability.toLocaleString()}</p>
+            `;
+        }
+    </script>
+</body>
+</html>
